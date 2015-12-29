@@ -172,3 +172,12 @@ module Sfn
     end
   end
 end
+
+# Override the `#set` method provided by Serverspec to ensure any
+# `spec_helper.rb` files do not clobber our configuration setup
+
+alias_method :serverspec_set, :set
+
+def set(*args)
+  serverspec_set(args.first)
+end

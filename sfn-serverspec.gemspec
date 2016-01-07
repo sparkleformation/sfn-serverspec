@@ -14,5 +14,6 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'serverspec', '~> 2.24'
   s.add_development_dependency 'rake'
   s.add_development_dependency 'rubocop', '~> 0.35.0'
+  s.add_development_dependency 'pry'
   s.files = Dir['{lib,bin,docs}/**/*'] + %w(sfn-serverspec.gemspec README.md CHANGELOG.md LICENSE)
 end

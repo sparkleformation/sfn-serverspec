@@ -164,8 +164,8 @@ module Sfn
         resource.logical_id == name
       end
 
-      if compute_resource.within?(:compute, :server)
-        [compute_resource.instance.expand]
+      if compute_resource.within?(:compute, :servers)
+        [compute_resource.expand]
       else
         compute_resource.expand.servers.map(&:expand)
       end

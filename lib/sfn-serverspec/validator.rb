@@ -3,6 +3,7 @@ require 'net/ssh'
 require 'net/ssh/proxy/command'
 require 'rspec'
 require 'rspec/core/formatters/documentation_formatter'
+require 'bogo-config/configuration'
 require 'serverspec'
 require 'sfn'
 
@@ -10,7 +11,7 @@ module Sfn
   # This is an sfn callback
   class Callback
     # Validate stack resources against Serverspec assertions
-    class ServerspecValidator < Callback
+    class ServerspecValidator < Callback # rubocop:disable ClassLength
       # @return [Smash] cached policies
       attr_reader :policies
 
@@ -134,40 +135,42 @@ module Sfn
           end
         end
       end
-    end
 
-    COMPUTE_RESOURCE_TYPES = ['AWS::EC2::Instance', 'AWS::AutoScaling::AutoScalingGroup']
+      alias_method :after_serverspec, :after_create
 
-    # Generate policy for stack, collate policies in cache
-    #
-    # @return [nil]
-    def template(info)
-      compiled_stack = info[:sparkle_stack].compile
+      COMPUTE_RESOURCE_TYPES = ['AWS::EC2::Instance', 'AWS::AutoScaling::AutoScalingGroup']
 
-      compiled_stack.resources.keys!.each do |r|
-        r_object = compiled_stack.resources[r]
-        if COMPUTE_RESOURCE_TYPES.include?(r_object['Type']) && r_object['Serverspec']
-          @policies.set(r, r_object.delete!('Serverspec'))
+      # Generate policy for stack, collate policies in cache
+      #
+      # @return [nil]
+      def template(info)
+        compiled_stack = info[:sparkle_stack].compile
+
+        compiled_stack.resources.keys!.each do |r|
+          r_object = compiled_stack.resources[r]
+          if COMPUTE_RESOURCE_TYPES.include?(r_object['Type']) && r_object['Serverspec']
+            @policies.set(r, r_object.delete!('Serverspec'))
+          end
         end
       end
-    end
 
-    private
+      private
 
-    # look up stack resource by name, return array of expanded compute instances
-    #
-    # @param stack [Miasma::Models::Orchestration::Stack]
-    # @param name [String]
-    # @return [Array<Miasma::Models::Compute::Server>]
-    def expand_compute_resource(stack, name)
-      compute_resource = stack.resources.all.detect do |resource|
-        resource.logical_id == name
-      end
+      # look up stack resource by name, return array of expanded compute instances
+      #
+      # @param stack [Miasma::Models::Orchestration::Stack]
+      # @param name [String]
+      # @return [Array<Miasma::Models::Compute::Server>]
+      def expand_compute_resource(stack, name)
+        compute_resource = stack.resources.all.detect do |resource|
+          resource.logical_id == name
+        end
 
-      if compute_resource.within?(:compute, :servers)
-        [compute_resource.expand]
-      else
-        compute_resource.expand.servers.map(&:expand)
+        if compute_resource.within?(:compute, :servers)
+          [compute_resource.expand]
+        else
+          compute_resource.expand.servers.map(&:expand)
+        end
       end
     end
   end
@@ -176,7 +179,7 @@ end
 # Override the `#set` method provided by Serverspec to ensure any
 # `spec_helper.rb` files do not clobber our configuration setup
 
-alias :serverspec_set :set
+alias :serverspec_set :set # rubocop:disable Alias
 
 def set(*args)
   serverspec_set(args.first)

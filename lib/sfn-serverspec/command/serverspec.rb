@@ -18,10 +18,9 @@ module Sfn
         print_only_original = config[:print_only]
         config[:print_only] = true
         load_template_file
-        ui.info "#{ui.color("Serverspec validation (#{provider.connection.provider}): ", :bold)} #{config[:file].sub(Dir.pwd, '').sub(%r{^/}, '')}" # rubocop:disable LineLength
         config[:print_only] = print_only_original
         api_action!(api_stack: root_stack) do
-          ui.info "Serverspec validating stack #{ui.color(root_stack.name, :bold)}:"
+          ui.info "Serverspec validating stack #{ui.color(root_stack.name, :bold)} with template #{config[:file].sub(Dir.pwd, '').sub(%r{^/}, '')}:" # rubocop:disable LineLength
         end
       end
     end

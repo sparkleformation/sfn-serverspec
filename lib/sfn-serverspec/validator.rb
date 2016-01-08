@@ -24,10 +24,6 @@ module Sfn
       end
 
       def after_create(*args)
-        log = Logger.new(STDOUT)
-        log.level = Logger.const_get(
-          config.fetch(:sfn_serverspec, :log_level, :info).to_s.upcase
-        )
 
         policies.each do |resource, r_config|
           resource_config = r_config.dump!.to_smash(:snake)
@@ -92,9 +88,9 @@ module Sfn
 
               spec_patterns = global_specs + resource_specs
 
-              log.debug "spec loading patterns: #{spec_patterns.inspect}"
-              log.debug "using SSH proxy commmand #{ssh_proxy_command}" unless ssh_proxy_command.nil?
-              log.info "running specs against #{target_host}"
+              ui.debug "spec loading patterns: #{spec_patterns.inspect}"
+              ui.debug "using SSH proxy commmand #{ssh_proxy_command}" unless ssh_proxy_command.nil?
+              ui.info "Serverspec validating #{instance.id} (#{target_host})"
 
               Specinfra.configuration.backend :ssh
               Specinfra.configuration.request_pty true
@@ -113,12 +109,12 @@ module Sfn
 
               unless ssh_proxy_command.nil?
                 connection_options[:proxy] = Net::SSH::Proxy::Command.new(ssh_proxy_command)
-                log.debug "using ssh proxy command: #{ssh_proxy_command}"
+                ui.debug "using ssh proxy command: #{ssh_proxy_command}"
               end
 
               unless ssh_key_paths.empty?
                 connection_options[:keys] = ssh_key_paths
-                log.debug "using ssh key paths #{connection_options[:keys]} exclusively"
+                ui.debug "using ssh key paths #{connection_options[:keys]} exclusively"
               end
 
               unless ssh_key_passphrase.nil?
@@ -130,7 +126,7 @@ module Sfn
               RSpec::Core::Runner.run(spec_patterns.map { |p| Dir.glob(p) })
 
             rescue => e
-              log.error "Something unexpected happened when running rspec: #{e.inspect}"
+              ui.error "Something unexpected happened when running rspec: #{e.inspect}"
             end
           end
         end

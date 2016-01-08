@@ -24,7 +24,6 @@ module Sfn
       end
 
       def after_create(*args)
-
         policies.each do |resource, r_config|
           resource_config = r_config.dump!.to_smash(:snake)
 

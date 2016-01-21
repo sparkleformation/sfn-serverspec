@@ -64,6 +64,51 @@ The following configuration options specified at the resource level will overrid
 * `ssh_key_paths`
 * `ssh_key_passphrase`
 
+### On-demand validation
+
+Provided that you are using Bundler, this callback also adds a `serverspec` command to sfn, enabling on-demand validation of a running stack. You'll want to configure sfn-serverspec thusly:
+
+```ruby
+gem 'sfn-serverspec', :require => 'sfn-serverspec'
+```
+
+The `serverspec` command requires both a stack name and a template to use as the source of Serverspec configuration. The template may be provided via command line flag or interactive file path prompt:
+
+```
+$ bundle exec sfn serverspec example-stack -f sparkleformation/example.rb
+[Sfn]: Callback template serverspec_validator: starting
+[Sfn]: Callback template serverspec_validator: complete
+[Sfn]: Serverspec validating stack example-stack with template sparkleformation/example.rb:
+[Sfn]: Callback after_serverspec serverspec_validator: starting
+[Sfn]: Serverspec validating i-55836892 (10.101.100.15)
+
+base
+Port "22"
+should be listening
+
+hello world
+displays a custom message on the index page
+Port "80"
+should be listening
+
+Finished in 2.92 seconds (files took 10.49 seconds to load)
+3 examples, 0 failures
+
+[Sfn]: Serverspec validating i-52836895 (10.101.100.19)
+
+Port "22"
+should be listening
+
+hello world
+displays a custom message on the index page
+Port "80"
+should be listening
+
+Finished in 0.35415 seconds (files took 13.41 seconds to load)
+3 examples, 0 failures
+
+[Sfn]: Callback after_serverspec serverspec_validator: complete
+```
 
 ## Caveats
 
@@ -71,7 +116,7 @@ Providing `serverspec` configuration on compute resources works in a manner simi
 
 As of this writing, the callback only processes Serverspec configuration on `AWS::AutoScaling::AutoScalingGroup` and `AWS::EC2::Instance` resources.
 
-Non-compute resources with `serverspec` configuration will not be processed by this callback, and will probably cause a validation error when trying to validate or create a stack from the template.
+Non-compute resources with `serverspec` configuration will not be processed by this callback, and will probably yield a validation error when trying to validate or create a stack from the template.
 
 ## Info
 

@@ -1,3 +1,6 @@
+# v0.1.4
+* Relax sfn constraint to allow 2.0 versions
+
 # v0.1.2
 * Use inherited bogo-ui instance for log messages
 * Fix incorrect scoping of methods on Sfn::Callback instead of Sfn::Callback::ServerspecValidator

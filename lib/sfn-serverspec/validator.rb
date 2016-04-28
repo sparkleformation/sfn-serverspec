@@ -152,6 +152,17 @@ module Sfn
 
       private
 
+      # detect nested stacks, return array of expanded stacks
+      #
+      # @param stack [Miasma::Models::Orchestration::Stack]
+      # @param name [String]
+      # @return [Array<Miasma::Models::Compute::Server>]
+      def expand_nested_stacks(stack)
+        stack.resources.all.map do|r|
+          r.expand if r.type == 'AWS::CloudFormation::Stack'
+        end
+      end
+
       # look up stack resource by name, return array of expanded compute instances
       #
       # @param stack [Miasma::Models::Orchestration::Stack]

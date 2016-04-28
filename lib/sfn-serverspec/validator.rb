@@ -173,6 +173,11 @@ module Sfn
           resource.logical_id == name
         end
 
+        if compute_resource.nil?
+          ui.info "No compute resources found in stack #{name}"
+          return []
+        end
+
         if compute_resource.within?(:compute, :servers)
           [compute_resource.expand]
         else

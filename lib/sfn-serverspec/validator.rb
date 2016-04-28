@@ -179,7 +179,6 @@ module Sfn
         end
 
         if compute_resource.nil?
-          ui.info "No compute resources found in stack #{name}"
           return []
         end
 

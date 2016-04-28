@@ -44,88 +44,93 @@ module Sfn
             config.fetch(:sfn_serverspec, :ssh_key_passphrase, nil)
           )
 
-          instances = expand_compute_resource(args.first[:api_stack], resource)
+          all_stacks = expand_nested_stacks(args.first[:api_stack]) + [args.first[:api_stack]]
+          ui.debug "Expanded #{args.first[:api_stack]} to #{all_stacks.join(', ')}"
 
-          instances.each do |instance|
-            target_host = case ssh_proxy_command.nil?
-                          when true
-                            instance.addresses_public.first.address
-                          when false
-                            instance.addresses_private.first.address
-                          end
+          all_stacks.each do |s|
+            instances = expand_compute_resource(s, resource)
 
-            begin
-              rspec_config = RSpec.configuration
-              rspec_config.reset
-              rspec_config.reset_filters
-              RSpec.world.reset
+            instances.each do |instance|
+              target_host = case ssh_proxy_command.nil?
+                            when true
+                              instance.addresses_public.first.address
+                            when false
+                              instance.addresses_private.first.address
+                            end
 
-              rspec_formatter = RSpec::Core::Formatters::DocumentationFormatter.new(
-                rspec_config.output_stream
-              )
+              begin
+                rspec_config = RSpec.configuration
+                rspec_config.reset
+                rspec_config.reset_filters
+                RSpec.world.reset
 
-              rspec_reporter = RSpec::Core::Reporter.new(rspec_config)
-
-              rspec_config.instance_variable_set(:@reporter, rspec_reporter)
-              rspec_loader = rspec_config.send(:formatter_loader)
-              rspec_notifications = rspec_loader.send(
-                :notifications_for,
-                RSpec::Core::Formatters::DocumentationFormatter
-              )
-              rspec_reporter.register_listener(
-                rspec_formatter,
-                *rspec_notifications
-              )
-
-              global_specs = [
-                config.fetch(:sfn_serverspec, :global_spec_patterns, [])
-              ].flatten.compact
-
-              resource_specs = [
-                resource_config.fetch(:spec_patterns, [])
-              ].flatten.compact
-
-              spec_patterns = global_specs + resource_specs
-
-              ui.debug "spec loading patterns: #{spec_patterns.inspect}"
-              ui.debug "using SSH proxy commmand #{ssh_proxy_command}" unless ssh_proxy_command.nil?
-              ui.info "Serverspec validating #{instance.id} (#{target_host})"
-
-              Specinfra.configuration.backend :ssh
-              Specinfra.configuration.request_pty true
-              Specinfra.configuration.host target_host
-
-              connection_options = {
-                user: resource_config.fetch(
-                  :ssh_user,
-                  config.fetch(:sfn_serverspec, :ssh_user, 'ec2-user')
-                ),
-                port: resource_config.fetch(
-                  :ssh_port,
-                  config.fetch(:sfn_serverspec, :ssh_port, 22)
+                rspec_formatter = RSpec::Core::Formatters::DocumentationFormatter.new(
+                  rspec_config.output_stream
                 )
-              }
 
-              unless ssh_proxy_command.nil?
-                connection_options[:proxy] = Net::SSH::Proxy::Command.new(ssh_proxy_command)
-                ui.debug "using ssh proxy command: #{ssh_proxy_command}"
+                rspec_reporter = RSpec::Core::Reporter.new(rspec_config)
+
+                rspec_config.instance_variable_set(:@reporter, rspec_reporter)
+                rspec_loader = rspec_config.send(:formatter_loader)
+                rspec_notifications = rspec_loader.send(
+                  :notifications_for,
+                  RSpec::Core::Formatters::DocumentationFormatter
+                )
+                rspec_reporter.register_listener(
+                  rspec_formatter,
+                  *rspec_notifications
+                )
+
+                global_specs = [
+                  config.fetch(:sfn_serverspec, :global_spec_patterns, [])
+                ].flatten.compact
+
+                resource_specs = [
+                  resource_config.fetch(:spec_patterns, [])
+                ].flatten.compact
+
+                spec_patterns = global_specs + resource_specs
+
+                ui.debug "spec loading patterns: #{spec_patterns.inspect}"
+                ui.debug "using SSH proxy commmand #{ssh_proxy_command}" unless ssh_proxy_command.nil?
+                ui.info "Serverspec validating #{instance.id} (#{target_host})"
+
+                Specinfra.configuration.backend :ssh
+                Specinfra.configuration.request_pty true
+                Specinfra.configuration.host target_host
+
+                connection_options = {
+                  user: resource_config.fetch(
+                    :ssh_user,
+                    config.fetch(:sfn_serverspec, :ssh_user, 'ec2-user')
+                  ),
+                  port: resource_config.fetch(
+                    :ssh_port,
+                    config.fetch(:sfn_serverspec, :ssh_port, 22)
+                  )
+                }
+
+                unless ssh_proxy_command.nil?
+                  connection_options[:proxy] = Net::SSH::Proxy::Command.new(ssh_proxy_command)
+                  ui.debug "using ssh proxy command: #{ssh_proxy_command}"
+                end
+
+                unless ssh_key_paths.empty?
+                  connection_options[:keys] = ssh_key_paths
+                  ui.debug "using ssh key paths #{connection_options[:keys]} exclusively"
+                end
+
+                unless ssh_key_passphrase.nil?
+                  connection_options[:passphrase] = ssh_key_passphrase
+                end
+
+                Specinfra.configuration.ssh_options connection_options
+
+                RSpec::Core::Runner.run(spec_patterns.map { |p| Dir.glob(p) })
+
+              rescue => e
+                ui.error "Something unexpected happened when running rspec: #{e.inspect}"
               end
-
-              unless ssh_key_paths.empty?
-                connection_options[:keys] = ssh_key_paths
-                ui.debug "using ssh key paths #{connection_options[:keys]} exclusively"
-              end
-
-              unless ssh_key_passphrase.nil?
-                connection_options[:passphrase] = ssh_key_passphrase
-              end
-
-              Specinfra.configuration.ssh_options connection_options
-
-              RSpec::Core::Runner.run(spec_patterns.map { |p| Dir.glob(p) })
-
-            rescue => e
-              ui.error "Something unexpected happened when running rspec: #{e.inspect}"
             end
           end
         end

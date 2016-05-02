@@ -44,8 +44,12 @@ module Sfn
             config.fetch(:sfn_serverspec, :ssh_key_passphrase, nil)
           )
 
-          stacks = args.first[:api_stack].nested_stacks
-          ui.debug "Expanded #{args.first[:api_stack]} to #{stacks.join(', ')}"
+          target_stack = args.first[:api_stack]
+          nested_stacks = target_stack.nested_stacks
+
+          stacks = nested_stacks.empty? ? [ target_stack ] : nested_stacks
+
+          ui.debug "Expanded #{target_stack} to #{stacks.join(', ')}"
 
           stacks.each do |s|
             instances = expand_compute_resource(s, resource)

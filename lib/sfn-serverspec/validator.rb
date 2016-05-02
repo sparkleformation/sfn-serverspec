@@ -44,10 +44,10 @@ module Sfn
             config.fetch(:sfn_serverspec, :ssh_key_passphrase, nil)
           )
 
-          all_stacks = expand_nested_stacks(args.first[:api_stack]) + [args.first[:api_stack]]
-          ui.debug "Expanded #{args.first[:api_stack]} to #{all_stacks.join(', ')}"
+          stacks = args.first[:api_stack].nested_stacks
+          ui.debug "Expanded #{args.first[:api_stack]} to #{stacks.join(', ')}"
 
-          all_stacks.each do |s|
+          stacks.each do |s|
             instances = expand_compute_resource(s, resource)
 
             instances.each do |instance|
@@ -156,17 +156,6 @@ module Sfn
       end
 
       private
-
-      # detect nested stacks, return array of expanded stacks
-      #
-      # @param stack [Miasma::Models::Orchestration::Stack]
-      # @param name [String]
-      # @return [Array<Miasma::Models::Compute::Server>]
-      def expand_nested_stacks(stack)
-        stack.resources.all.map do|r|
-          r.expand if r.type == 'AWS::CloudFormation::Stack'
-        end
-      end
 
       # look up stack resource by name, return array of expanded compute instances
       #

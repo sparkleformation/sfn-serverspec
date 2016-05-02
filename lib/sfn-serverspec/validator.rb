@@ -131,7 +131,8 @@ module Sfn
         end
       end
 
-      alias_method :after_serverspec, :after_create, :after_update
+      alias_method :after_serverspec, :after_create
+      alias_method :after_update, :after_create
 
       COMPUTE_RESOURCE_TYPES = ['AWS::EC2::Instance', 'AWS::AutoScaling::AutoScalingGroup']
 

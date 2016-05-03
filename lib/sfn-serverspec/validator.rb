@@ -100,6 +100,7 @@ module Sfn
                 ui.info "Serverspec validating #{instance.id} (#{target_host})"
 
                 Specinfra.configuration.backend :ssh
+                Specinfra::Backend::Ssh.clear
                 Specinfra.configuration.request_pty true
                 Specinfra.configuration.host target_host
 

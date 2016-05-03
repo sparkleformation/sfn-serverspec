@@ -70,7 +70,6 @@ Provided that you are using Bundler, this callback also adds a `serverspec` comm
 
 ```ruby
 group :sfn do
-  gem 'sfn'
   gem 'sfn-serverspec'
 end
 ```

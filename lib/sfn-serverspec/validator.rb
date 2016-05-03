@@ -160,6 +160,10 @@ module Sfn
         end
       end
 
+      def quiet
+        true unless config[:debug]
+      end
+
       private
 
       # look up stack resource by name, return array of expanded compute instances

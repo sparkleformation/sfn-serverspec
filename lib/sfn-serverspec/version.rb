@@ -1,5 +1,5 @@
 # SfnServerspec internal constants
 module SfnServerspec
   # Current version
-  VERSION = Gem::Version.new('0.1.5')
+  VERSION = Gem::Version.new('1.0.0')
 end

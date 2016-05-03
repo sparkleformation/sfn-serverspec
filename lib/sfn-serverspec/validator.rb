@@ -49,7 +49,7 @@ module Sfn
 
           stacks = nested_stacks.empty? ? [ target_stack ] : nested_stacks
 
-          ui.debug "Expanded #{target_stack} to #{stacks.join(', ')}"
+          ui.debug "Expanded #{target_stack} to #{stacks.map(&:inspect).join(', ')}"
 
           stacks.each do |s|
             instances = expand_compute_resource(s, resource)

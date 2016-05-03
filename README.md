@@ -11,6 +11,7 @@ Callbacks are configured via the `.sfn` configuration file. First, the callback 
 ```ruby
 Configuration.new do
   callbacks do
+    # requiring sfn-serverspec here is optional when using bundler
     require ['sfn-serverspec']
     default ['serverspec_validator']
   end
@@ -66,11 +67,15 @@ The following configuration options specified at the resource level will overrid
 
 ### On-demand validation
 
-Provided that you are using Bundler, this callback also adds a `serverspec` command to sfn, enabling on-demand validation of a running stack. You'll want to configure sfn-serverspec thusly:
+Provided that you are using Bundler, this callback also adds a `serverspec` command to sfn, enabling on-demand validation of a running stack. You'll want to add sfn-serverspec to your Gemfile thusly:
 
 ```ruby
-gem 'sfn-serverspec', :require => 'sfn-serverspec'
+group :sfn do
+  gem 'sfn-serverspec'
+end
 ```
+
+Note that placing sfn and its friends in the `:sfn` group ensures that they'll be automatically `require`-d by sfn at run time.
 
 The `serverspec` command requires both a stack name and a template to use as the source of Serverspec configuration. The template may be provided via command line flag or interactive file path prompt:
 

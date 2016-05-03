@@ -11,6 +11,7 @@ Callbacks are configured via the `.sfn` configuration file. First, the callback 
 ```ruby
 Configuration.new do
   callbacks do
+    # requiring sfn-serverspec here is optional when using bundler
     require ['sfn-serverspec']
     default ['serverspec_validator']
   end

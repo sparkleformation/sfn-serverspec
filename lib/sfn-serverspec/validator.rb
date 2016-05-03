@@ -47,7 +47,7 @@ module Sfn
           target_stack = args.first[:api_stack]
           nested_stacks = target_stack.nested_stacks
 
-          stacks = nested_stacks.empty? ? [ target_stack ] : nested_stacks
+          stacks = nested_stacks.empty? ? [target_stack] : nested_stacks
 
           ui.debug "Expanded #{target_stack} to #{stacks.map(&:inspect).join(', ')}"
 
@@ -176,9 +176,7 @@ module Sfn
           resource.logical_id == name
         end
 
-        if compute_resource.nil?
-          return []
-        end
+        return [] if compute_resource.nil?
 
         if compute_resource.within?(:compute, :servers)
           [compute_resource.expand]
